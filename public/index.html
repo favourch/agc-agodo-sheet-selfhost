@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Members Data</title>
+    <link href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .highlight-yellow {
+            background-color: #ffff99 !important; /* Light yellow */
+        }
+    </style>
+    
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">AGC Agodo Members Directory</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container header-spacing">
+        <h2>Members Table</h2>
+        <table class="table table-striped table-bordered" id="membersTable">
+            <thead>
+                <tr>
+                    <!-- Headers will be injected here -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data rows will be injected here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+    <script>
+        axios.get('/dl?id=1xn9OXGMe5o7cGj7X4VN0yl&sheetName=Sheet1&columns=id,surname,otherName,department,membershipStatus,status')
+            .then(function (response) {
+                const data = response.data;
+                if (data.length > 0) {
+                    const headers = Object.keys(data[0]);
+                    const headerRow = headers.map(header => `<th>${header}</th>`).join('');
+                    document.querySelector('#membersTable thead tr').innerHTML = headerRow;
+    
+                    $(document).ready(function() {
+                        $('#membersTable').DataTable({
+                            data: data,
+                            columns: headers.map(header => ({ data: header, defaultContent: "" })),
+                            responsive: true,
+                            deferRender: true,
+                            scroller: true,
+                            createdRow: function(row, data, dataIndex) {
+                                // Highlight the row if the status is not 'CONFIRMED'
+                                if (data.status !== "CONFIRMED") {
+                                    $(row).addClass('highlight-yellow');
+                                }
+                            }
+                        });
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error('Error fetching data:', error);
+                $('#membersTable').html('<tr><td colspan="100%">Error loading data.</td></tr>');
+            });
+    </script>
+    
+    
+</body>
+</html>
