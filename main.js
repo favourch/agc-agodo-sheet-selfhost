@@ -4,7 +4,11 @@ const axios = require('axios'); // Using axios for HTTP requests
 const { performance } = require('perf_hooks');
 const { parse } = require('csv-parse/sync');
 
+
 const app = express();
+
+// Set the view engine to ejs
+app.set('view engine', 'ejs');
 const port = process.env.PORT || 3000;
 
 class Performance {
@@ -32,9 +36,37 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.get('/', function(req, res) {
-    res.sendFile(__dirname + '/index.html');
+app.get('/', async (req, res) => {
+    const id = '1xn9OXGMe5o7cGj7X4VN0yl'; // Hardcoded or from an environment variable
+    const sheetName = 'Sheet1'; // Hardcoded or from an environment variable
+    const columns = 'id,surname,otherName,department,membershipStatus,status'; // Define your required columns here
+
+    const getUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=1&sheet=${sheetName}`;
+
+    try {
+        const response = await axios.get(getUrl);
+        const records = parse(response.data, { columns: true, skip_empty_lines: true });
+
+        // Filter records to only include specified columns
+        const selectedColumns = columns.split(',');
+        const filteredRecords = records.map(record => {
+            return selectedColumns.reduce((obj, key) => {
+                if (record.hasOwnProperty(key)) {
+                    obj[key] = record[key];
+                }
+                return obj;
+            }, {});
+        });
+
+        const headers = selectedColumns;
+        res.render('index', { data: { headers, records: filteredRecords } });
+    } catch (error) {
+        // console.error('Failed to fetch data:', error);
+        res.status(500).send('Failed to load page');
+    }
 });
+
+
 
 
 // Route to download data from Google Sheets
