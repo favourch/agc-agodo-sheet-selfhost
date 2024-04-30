@@ -55,8 +55,8 @@ const auth = (req, res, next) => {
     const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
     const [username, password] = credentials.split(':');
 
-    const adminUsername = process.env.ADMIN_USERNAME || admin || agodo; // Set these in your environment variables
-    const adminPassword = process.env.ADMIN_PASSWORD || passd || thegreat; // Set these in your environment variables
+    const adminUsername = process.env.ADMIN_USERNAME; // Set these in your environment variables
+    const adminPassword = process.env.ADMIN_PASSWORD; // Set these in your environment variables
 
     if (username === adminUsername && password === adminPassword) {
         return next();
