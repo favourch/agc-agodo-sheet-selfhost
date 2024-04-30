@@ -46,25 +46,29 @@ app.use(function(req, res, next) {
 
 const auth = (req, res, next) => {
     const authHeader = req.headers.authorization;
+
+    // Prompt for login every time by disabling cache
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     if (!authHeader) {
-        res.setHeader('WWW-Authenticate', 'Basic');
-        return res.sendStatus(401);
+        res.setHeader('WWW-Authenticate', 'Basic realm="Access to the admin area", charset="UTF-8"');
+        return res.status(401).send('Authentication required.'); // 401 Unauthorized
     }
 
     const base64Credentials = authHeader.split(' ')[1];
     const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
     const [username, password] = credentials.split(':');
 
-    const adminUsername = process.env.ADMIN_USERNAME; // Set these in your environment variables
-    const adminPassword = process.env.ADMIN_PASSWORD; // Set these in your environment variables
-
-    if (username === adminUsername && password === adminPassword) {
+    if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
         return next();
     } else {
-        res.setHeader('WWW-Authenticate', 'Basic');
-        return res.sendStatus(401);
+        res.setHeader('WWW-Authenticate', 'Basic realm="Access to the admin area", charset="UTF-8"');
+        return res.status(401).send('Access denied'); // 401 Unauthorized
     }
 };
+
 
 
 app.get('/', async (req, res) => {
