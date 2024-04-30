@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGC Agodo Members</title>
+    <link href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .highlight-yellow { background-color: #ffff99 !important; }
+        .header-spacing { margin-bottom: 2rem; }
+        .modal-logo {
+            display: block;
+            margin: 20px auto 10px;
+            width: 100%; /* Full width on smaller screens, adjust in media queries if needed */
+            max-width: 200px; /* Limits size on larger screens */
+        }
+        .modal-body {
+            text-align: center;
+            padding: 20px; /* Add padding to modal body */
+            font-family: 'Arial', sans-serif; /* Improve typography */
+        }
+        .modal-detail {
+            font-size: 16px;
+            margin-bottom: 10px; /* Increase spacing between details */
+            border-bottom: 1px solid #eee; /* Add a subtle line under each item */
+            padding-bottom: 5px; /* Padding under text before line */
+        }
+        .modal-header, .modal-footer {
+            border-bottom: none;
+            border-top: none;
+            background-color: #f8f9fa; /* Subtle background for headers and footers */
+        }
+        .modal-title {
+            font-weight: bold; /* Make modal title bold */
+        }
+        @media (max-width: 768px) {
+            .modal-logo {
+                max-width: 150px;
+            }
+            .modal-detail {
+                font-size: 14px;
+            }
+        }
+    </style>
+    
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">AGC Agodo Members Directory</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container header-spacing">
+        <h2>Members Table</h2>
+        <table class="table table-striped table-bordered" id="membersTable">
+            <thead>
+                <tr>
+                    <% headers.forEach(function(header) { %>
+                        <th><%= header %></th>
+                    <% }); %>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% records.forEach(function(record, index) { %>
+                    <tr <% if (record.status !== "CONFIRMED") { %> class="highlight-yellow" <% } %>>
+                        <% headers.forEach(function(header) { %>
+                            <td><%= record[header] %></td>
+                        <% }); %>
+                        <td><button type="button" class="btn btn-info" data-toggle="modal" data-target="#detailsModal<%= index %>" aria-label="View details about <%= record.surname %>">View</button></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modals for Each Member -->
+<% recordsComplete.forEach(function(record, index) { %>
+    <div class="modal fade" id="detailsModal<%= index %>" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel<%= index %>" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsModalLabel<%= index %>">Member Details</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img src="https://res.cloudinary.com/dzsp4g9vd/image/upload/v1654339758/agc-agodo/logo/ag-logo.jpg" alt="AGC Agodo Logo" class="modal-logo">
+                    <p class="modal-detail"><strong>Surname:</strong> <%= record.surname %></p>
+                    <p class="modal-detail"><strong>Other Name:</strong> <%= record.otherName %></p>
+                    <p class="modal-detail"><strong>Department:</strong> <%= record.department %></p>
+                    <p class="modal-detail"><strong>Membership Status:</strong> <%= record.membershipStatus %></p>
+                    <p class="modal-detail"><strong>Phone Number:</strong> <%= record.phoneNumber %></p>
+                    <p class="modal-detail"><strong>Address:</strong> <%= record.address %></p>
+                    <p class="modal-detail"><strong>Status:</strong> <%= record.status %></p>
+                    <!-- Add any extra modal-only details here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<% }); %>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#membersTable').DataTable({
+                responsive: true,
+                deferRender: true,
+                scroller: true,
+                "order": [[0, "asc"]],
+                "columnDefs": [
+                    {
+                        "targets": [4, 5], // Assuming phoneNumber and email are at these indexes
+                        "visible": false,
+                        "searchable": false
+                    }
+                ]
+            });
+        });
+    </script>
+</body>
+</html>

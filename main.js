@@ -3,12 +3,18 @@ const utils = require('./utils'); // Make sure utils has getUrlQueryParams metho
 const axios = require('axios'); // Using axios for HTTP requests
 const { performance } = require('perf_hooks');
 const { parse } = require('csv-parse/sync');
+// Add dotenv
+require('dotenv').config();
+
 
 
 const app = express();
 
 // Set the view engine to ejs
 app.set('view engine', 'ejs');
+// Optionally specify the views directory explicitly
+app.set('views', 'views');
+
 const port = process.env.PORT || 3000;
 
 class Performance {
@@ -27,7 +33,8 @@ class Performance {
 }
 
 // Serving static files from the 'public' directory
-app.use(express.static("public"));
+// app.use(express.static("views"));
+// app.use(express.static("public"));
 
 // Setup CORS to allow all origins
 app.use(function(req, res, next) {
@@ -36,35 +43,103 @@ app.use(function(req, res, next) {
     next();
 });
 
+
+const auth = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        res.setHeader('WWW-Authenticate', 'Basic');
+        return res.sendStatus(401);
+    }
+
+    const base64Credentials = authHeader.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+    const [username, password] = credentials.split(':');
+
+    const adminUsername = process.env.ADMIN_USERNAME || admin || agodo; // Set these in your environment variables
+    const adminPassword = process.env.ADMIN_PASSWORD || passd || thegreat; // Set these in your environment variables
+
+    if (username === adminUsername && password === adminPassword) {
+        return next();
+    } else {
+        res.setHeader('WWW-Authenticate', 'Basic');
+        return res.sendStatus(401);
+    }
+};
+
+
 app.get('/', async (req, res) => {
-    const id = '1xn9OXGMe5o7cGj7X4VN0yl'; // Hardcoded or from an environment variable
-    const sheetName = 'Sheet1'; // Hardcoded or from an environment variable
-    const columns = 'id,surname,otherName,department,membershipStatus,status'; // Define your required columns here
+    const id = '1xn9OXGMe5o7cGj7X4VN0yl-YIxPv1wYT_cyvY-kpE_U'; // Ideally from an environment variable
+    const sheetName = 'Sheet1';
+    const columns = 'id,surname,otherName,department,membershipStatus,status';
+    const columnsModal = 'id,surname,otherName,department,membershipStatus,phoneNumber,address,status';
 
     const getUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=1&sheet=${sheetName}`;
 
     try {
         const response = await axios.get(getUrl);
-        const records = parse(response.data, { columns: true, skip_empty_lines: true });
+        const allRecords = parse(response.data, { columns: true, skip_empty_lines: true });
 
-        // Filter records to only include specified columns
-        const selectedColumns = columns.split(',');
-        const filteredRecords = records.map(record => {
-            return selectedColumns.reduce((obj, key) => {
-                if (record.hasOwnProperty(key)) {
-                    obj[key] = record[key];
-                }
+        // Select only the columns needed for the DataTable
+        const records = allRecords.map(record => {
+            return columns.split(',').reduce((obj, col) => {
+                obj[col] = record[col];
                 return obj;
             }, {});
         });
 
-        const headers = selectedColumns;
-        res.render('index', { data: { headers, records: filteredRecords } });
+        // Select only the columns needed for the Modals
+        const recordsComplete = allRecords.map(record => {
+            return columnsModal.split(',').reduce((obj, col) => {
+                obj[col] = record[col];
+                return obj;
+            }, {});
+        });
+
+        res.render('home', { recordsComplete: recordsComplete, records: records, headers: columns.split(',') });
     } catch (error) {
-        // console.error('Failed to fetch data:', error);
-        res.status(500).send('Failed to load page');
+        console.error('Error during fetch:', error);
+        res.status(500).send('Failed to load page due to error: ' + error.message);
     }
 });
+
+
+app.get('/admin', auth, async (req, res) => {
+    const id = '1xn9OXGMe5o7cGj7X4VN0yl-YIxPv1wYT_cyvY-kpE_U'; // Ideally from an environment variable
+    const sheetName = 'Sheet1';
+    const columns = 'id,surname,otherName,department,membershipStatus,status';
+    const columnsModal = 'id,surname,otherName,phoneNumber,gender,department,membershipStatus,occupation,email,state,lga,town,maritalStatus,address,dateJoined,nextOfKin,birthDay,birthMonth,nextOfKinPhone,nextOfKinAddress,status';
+
+
+    const getUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=1&sheet=${sheetName}`;
+    
+
+    try {
+        const response = await axios.get(getUrl);
+        const allRecords = parse(response.data, { columns: true, skip_empty_lines: true });
+
+        // Select only the columns needed for the DataTable
+        const records = allRecords.map(record => {
+            return columns.split(',').reduce((obj, col) => {
+                obj[col] = record[col];
+                return obj;
+            }, {});
+        });
+
+        // Select only the columns needed for the Modals
+        const recordsComplete = allRecords.map(record => {
+            return columnsModal.split(',').reduce((obj, col) => {
+                obj[col] = record[col];
+                return obj;
+            }, {});
+        });
+
+        res.render('admin', { recordsComplete: recordsComplete, records: records, headers: columns.split(',') });
+    } catch (error) {
+        console.error('Error during fetch:', error);
+        res.status(500).send('Failed to load page due to error: ' + error.message);
+    }
+});
+
 
 
 
